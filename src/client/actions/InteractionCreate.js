@@ -16,6 +16,7 @@ class InteractionCreateAction extends Action {
     const guild = client.guilds.cache.get(data.guild_id);
     const interaction = {
       id: data.id,
+      token: data.token,
       channel: client.channels.cache.get(data.channel_id),
       guild: guild,
       member: guild ? guild.members.cache.get(data.member.user.id) || (await guild.members.fetch(data.member.user.id)) || null : null,
@@ -24,10 +25,20 @@ class InteractionCreateAction extends Action {
       content: data.data.options ? parseContent(data.data.options) : "",
       createdTimestamp: SnowflakeUtil.deconstruct(data.id).timestamp,
       options: data.data.options ? data.data.options : null,
+      reply (input) {
+       client.api.interactions(interaction.id, interaction.token).callback.post({data: {
+          type: 4,
+          data: {
+    content: 'content'
+  }
+  }
+};
+}})
+      }
+}})
     };
     client.emit(Events.INTERACTION_CREATE, interaction);
     return { interaction };
   }
 }
-
 module.exports = InteractionCreateAction;
