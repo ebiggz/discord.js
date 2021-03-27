@@ -29,13 +29,8 @@ class InteractionCreateAction extends Action {
        client.api.interactions(interaction.id, interaction.token).callback.post({data: {
           type: 4,
           data: {
-    content: 'content'
-  }
-  }
-};
-}})
-      }
-}})
+            content: 'content'
+       }}})}
     };
     client.emit(Events.INTERACTION_CREATE, interaction);
     return { interaction };
