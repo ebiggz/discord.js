@@ -36,4 +36,5 @@ class InteractionCreateAction extends Action {
     return { interaction };
   }
 }
+
 module.exports = InteractionCreateAction;
