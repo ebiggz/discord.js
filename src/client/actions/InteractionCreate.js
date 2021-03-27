@@ -26,12 +26,23 @@ class InteractionCreateAction extends Action {
       createdTimestamp: SnowflakeUtil.deconstruct(data.id).timestamp,
       options: data.data.options ? data.data.options : null,
       reply (input) {
-       client.api.interactions(interaction.id, interaction.token).callback.post({data: {
+        if(typeof input === 'object'){
+          client.api.interactions(interaction.id, interaction.token).callback.post({data: {
+            type: 4,
+            data: {
+              embeds: [
+                input
+              ]
+         }
+       }})}else if(typeof input === 'string'){
+        client.api.interactions(interaction.id, interaction.token).callback.post({data: {
           type: 4,
           data: {
-            content: 'content'
-       }}})}
-    };
+            content: input
+       }}})}else {
+         throw new Error('Not embed or string')
+       }
+    }}
     client.emit(Events.INTERACTION_CREATE, interaction);
     return { interaction };
   }
