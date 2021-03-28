@@ -58,7 +58,7 @@ class InteractionCreateAction extends Action {
 
       },
       thinking (input) {
-        client.api.interactions(message.id, message.token).callback.post({data: {
+        client.api.interactions(interaction.id, interaction.token).callback.post({data: {
           type: 5,
           data: {
               content: ''
