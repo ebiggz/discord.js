@@ -42,7 +42,29 @@ class InteractionCreateAction extends Action {
        }}})}else {
          throw new Error('Not embed or string')
        }
-    }}
+    },
+      edit (input) {
+        if(typeof input === 'object'){
+          client.api.webhooks(client.user.id, interaction.token).messages('@original').patch({data: {
+            embeds: [
+              input
+            ]
+        }})}else if(typeof input === 'string'){
+        client.api.webhooks(client.user.id, interaction.token).messages('@original').patch({data: {
+          content: input
+      }})}else {
+         throw new Error('Not embed or string')
+       }
+
+      },
+      thinking (input) {
+        client.api.interactions(message.id, message.token).callback.post({data: {
+          type: 5,
+          data: {
+              content: ''
+       }}})
+      }
+    }
     client.emit(Events.INTERACTION_CREATE, interaction);
     return { interaction };
   }
