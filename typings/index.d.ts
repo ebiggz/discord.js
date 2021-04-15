@@ -2806,6 +2806,7 @@ declare module 'discord.js' {
 
   interface Interaction {
     id: string;
+    token: string;
     channel: TextChannel;
     guild: Guild;
     member: GuildMember | null;
@@ -2814,6 +2815,9 @@ declare module 'discord.js' {
     content: string;
     createdTimestamp: number;
     options: { value: string; name: string }[] | null;
+    reply: (input: MessageEmbed | string) => void;
+    edit: (input: MessageEmbed | string) => void;
+    thinking: () => void;
   }
 
   interface MessageEmbedProvider {
