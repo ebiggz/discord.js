@@ -37,7 +37,7 @@ class InteractionCreateAction extends Action {
   async handle(data) {
     const client = this.client;
     const guild = client.guilds.cache.get(data.guild_id);
-    let sentInitial = false;
+    let sentInitialReply = false;
     const interaction = {
       id: data.id,
       token: data.token,
@@ -67,11 +67,11 @@ class InteractionCreateAction extends Action {
           },
         };
 
-        const replyRequest = !sentInitial
+        const replyRequest = !sentInitialReply
           ? client.api.interactions(interaction.id, interaction.token).callback.post(body)
           : client.api.webhooks(client.user.id, interaction.token).post(body.data);
 
-        if (!sentInitial) sentInitial = true;
+        if (!sentInitialReply) sentInitialReply = true;
 
         return replyRequest.then(response => response.id ?? '@original');
       },
@@ -88,8 +88,8 @@ class InteractionCreateAction extends Action {
         await client.api.webhooks(client.user.id, interaction.token).messages(messageId).delete();
       },
       async thinking(ephemeral = false) {
-        if (sentInitial) return;
-        sentInitial = true;
+        if (sentInitialReply) return;
+        sentInitialReply = true;
         await client.api.interactions(interaction.id, interaction.token).callback.post({
           data: {
             type: 5,
