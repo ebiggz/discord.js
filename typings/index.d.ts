@@ -2815,9 +2815,37 @@ declare module 'discord.js' {
     content: string;
     createdTimestamp: number;
     options: { value: string; name: string }[] | null;
-    reply: (message?: string, embeds?: MessageEmbed[], ephemeral?: boolean) => void;
-    edit: (message?: string, embeds?: MessageEmbed[], ephemeral?: boolean) => void;
-    thinking: (ephemeral?: boolean) => void;
+    /**
+     * Replies to this Interaction.
+     * @arg input - A message string, embed array, or object containing both
+     * @arg ephemeral - Make the reply viewable only to the command sender. If false, reply is public
+     * @returns A Promise that resolves a `messageId` which can be used with `.edit(...)` and `.delete(...)`
+     */
+    reply: (
+      input?: string | MessageEmbed[] | { content: string; embeds: MessageEmbed[] },
+      ephemeral?: boolean,
+    ) => Promise<string>;
+    /**
+     * Edit a previous reply to this Interaction
+     * @arg input - A message string, embed array, or object containing both
+     * @arg messageId - The id of the message to delete. If omitted, the original reply message is deleted.
+     */
+    edit: (
+      input?: string | MessageEmbed[] | { content: string; embeds: MessageEmbed[] },
+      messageId?: string,
+    ) => Promise<void>;
+    /**
+     * Sends a simple reply that makes the bot say "is thinking..."
+     *
+     * **Note:** You must use `.edit(...)` if you want to update the reply with an actual message later on.
+     * @arg ephemeral - Make the reply viewable only to the command sender. If false, reply is public
+     */
+    thinking: (ephemeral?: boolean) => Promise<void>;
+    /**
+     * Deletes a reply to the Interaction
+     * @arg messageId - The id of the message to delete. If omitted, the original reply message is deleted.
+     */
+    delete: (messageId?: string) => Promise<void>;
   }
 
   interface MessageEmbedProvider {

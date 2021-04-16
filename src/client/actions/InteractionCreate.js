@@ -74,21 +74,21 @@ class InteractionCreateAction extends Action {
 
         return replyRequest.then(response => response.id ?? '@original');
       },
-      edit(input, messageId = '@original') {
+      async edit(input, messageId = '@original') {
         const replyData = buildInteractionReplyData(input);
         if (!input) {
           throw new Error('Message content or embeds must be provided');
         }
-        client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch({
+        await client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch({
           data: replyData,
         });
       },
-      delete(messageId = '@original') {
-        client.api.webhooks(client.user.id, interaction.token).messages(messageId).delete();
+      async delete(messageId = '@original') {
+        await client.api.webhooks(client.user.id, interaction.token).messages(messageId).delete();
       },
-      thinking(ephemeral = false) {
+      async thinking(ephemeral = false) {
         if (sentInitial) return;
-        client.api.interactions(interaction.id, interaction.token).callback.post({
+        await client.api.interactions(interaction.id, interaction.token).callback.post({
           data: {
             type: 5,
             data: {
