@@ -46,7 +46,7 @@ class InteractionCreateAction extends Action {
 
         const replyRequest = !sentInitial
           ? client.api.interactions(interaction.id, interaction.token).callback.post(replyData)
-          : client.api.webhooks(interaction.id, interaction.token).post(replyData);
+          : client.api.webhooks(client.user.id, interaction.token).post(replyData);
 
         sentInitial = true;
 
