@@ -27,58 +27,43 @@ class InteractionCreateAction extends Action {
       content: data.data.options ? parseContent(data.data.options) : '',
       createdTimestamp: SnowflakeUtil.deconstruct(data.id).timestamp,
       options: data.data.options ? data.data.options : null,
-      reply(input) {
-        if (typeof input === 'object') {
-          client.api.interactions(interaction.id, interaction.token).callback.post({
+      reply(message, embeds, ephemeral = false) {
+        if (!message && !embeds) {
+          throw new Error('Message text or embed must be provided');
+        }
+        client.api.interactions(interaction.id, interaction.token).callback.post({
+          data: {
+            type: 4,
             data: {
-              type: 4,
-              data: {
-                embeds: [input],
-              },
+              content: message,
+              embeds: embeds ?? [],
+              flags: ephemeral ? 64 : null,
+            },
+          },
+        });
+      },
+      edit(message, embeds, ephemeral = false) {
+        if (!message && !embeds) {
+          throw new Error('Message text or embed must be provided');
+        }
+        client.api
+          .webhooks(client.user.id, interaction.token)
+          .messages('@original')
+          .patch({
+            data: {
+              content: message,
+              embeds: embeds ?? [],
+              flags: ephemeral ? 64 : null,
             },
           });
-        } else if (typeof input === 'string') {
-          client.api.interactions(interaction.id, interaction.token).callback.post({
-            data: {
-              type: 4,
-              data: {
-                content: input,
-              },
-            },
-          });
-        } else {
-          throw new Error('Not embed or string');
-        }
       },
-      edit(input) {
-        if (typeof input === 'object') {
-          client.api
-            .webhooks(client.user.id, interaction.token)
-            .messages('@original')
-            .patch({
-              data: {
-                embeds: [input],
-              },
-            });
-        } else if (typeof input === 'string') {
-          client.api
-            .webhooks(client.user.id, interaction.token)
-            .messages('@original')
-            .patch({
-              data: {
-                content: input,
-              },
-            });
-        } else {
-          throw new Error('Not embed or string');
-        }
-      },
-      thinking() {
+      thinking(ephemeral = false) {
         client.api.interactions(interaction.id, interaction.token).callback.post({
           data: {
             type: 5,
             data: {
               content: '',
+              flags: ephemeral ? 64 : null,
             },
           },
         });
