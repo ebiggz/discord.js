@@ -2817,6 +2817,8 @@ declare module 'discord.js' {
     options: { value: string; name: string }[] | null;
     /**
      * Replies to this Interaction.
+     *
+     * **Note:** Ephemeral messages don't appear to support embeds at this time.
      * @arg input - A message string, embed array, or object containing both
      * @arg ephemeral - Make the reply viewable only to the command sender. If false, reply is public
      * @returns A Promise that resolves a `messageId` which can be used with `.edit(...)` and `.delete(...)`
@@ -2827,6 +2829,8 @@ declare module 'discord.js' {
     ) => Promise<string>;
     /**
      * Edit a previous reply to this Interaction
+     *
+     * **Note:** Ephemeral messages don't appear to support embeds at this time.
      * @arg input - A message string, embed array, or object containing both
      * @arg messageId - The id of the message to delete. If omitted, the original reply message is deleted.
      */
@@ -2843,6 +2847,8 @@ declare module 'discord.js' {
     thinking: (ephemeral?: boolean) => Promise<void>;
     /**
      * Deletes a reply to the Interaction
+     *
+     * **Note:** You cannot delete ephemeral messages.
      * @arg messageId - The id of the message to delete. If omitted, the original reply message is deleted.
      */
     delete: (messageId?: string) => Promise<void>;

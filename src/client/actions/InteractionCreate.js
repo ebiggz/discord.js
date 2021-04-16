@@ -80,7 +80,6 @@ class InteractionCreateAction extends Action {
         if (!input) {
           throw new Error('Message content or embeds must be provided');
         }
-        console.log(replyData);
         await client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch({
           data: replyData,
         });
