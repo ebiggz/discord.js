@@ -33,24 +33,24 @@ class InteractionCreateAction extends Action {
           throw new Error('Message text or embed must be provided');
         }
 
+        const replyData = {
+          data: {
+            type: 4,
+            data: {
+              content: message,
+              embeds: embeds ?? [],
+              flags: ephemeral ? 64 : null,
+            },
+          },
+        };
+
         const replyRequest = sentInitial
-          ? client.api.interactions(interaction.id, interaction.token).callback
-          : client.api.interactions(interaction.id, interaction.token);
+          ? client.api.interactions(interaction.id, interaction.token).callback.post(replyData)
+          : client.api.interactions(interaction.id, interaction.token).post(replyData);
 
         sentInitial = true;
 
-        replyRequest
-          .post({
-            data: {
-              type: 4,
-              data: {
-                content: message,
-                embeds: embeds ?? [],
-                flags: ephemeral ? 64 : null,
-              },
-            },
-          })
-          .then(response => console.log(response));
+        replyRequest.then(response => console.log(response));
       },
       edit(message, embeds, ephemeral = false) {
         if (!message && !embeds) {
