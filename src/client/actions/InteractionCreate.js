@@ -4,10 +4,32 @@ const Action = require('./Action');
 const { Events } = require('../../util/Constants');
 const SnowflakeUtil = require('../../util/Snowflake');
 
+const EPHEMERAL_FLAG_ID = 64;
+
 const parseContent = options => {
   let content = '';
   options.forEach(element => (content += element.value));
   return content;
+};
+
+const buildInteractionReplyData = input => {
+  if (typeof input === 'object') {
+    if (Array.isArray(input)) {
+      return {
+        embeds: input,
+      };
+    } else {
+      return {
+        content: input.content,
+        embeds: input.embeds,
+      };
+    }
+  } else if (typeof input === 'string') {
+    return {
+      content: input,
+    };
+  }
+  return null;
 };
 
 class InteractionCreateAction extends Action {
@@ -28,52 +50,50 @@ class InteractionCreateAction extends Action {
       content: data.data.options ? parseContent(data.data.options) : '',
       createdTimestamp: SnowflakeUtil.deconstruct(data.id).timestamp,
       options: data.data.options ? data.data.options : null,
-      reply(message, embeds, ephemeral = false) {
-        if (!message && !embeds) {
-          throw new Error('Message text or embed must be provided');
+      reply(input, ephemeral = false) {
+        const replyData = buildInteractionReplyData(input);
+        if (!input) {
+          throw new Error('Message content or embeds must be provided');
         }
 
-        const replyData = {
+        const body = {
           data: {
             type: 4,
             data: {
-              content: message,
-              embeds: embeds ?? [],
-              flags: ephemeral ? 64 : null,
+              ...replyData,
+              flags: ephemeral ? EPHEMERAL_FLAG_ID : null,
             },
           },
         };
 
         const replyRequest = !sentInitial
-          ? client.api.interactions(interaction.id, interaction.token).callback.post(replyData)
-          : client.api.webhooks(client.user.id, interaction.token).post(replyData.data);
+          ? client.api.interactions(interaction.id, interaction.token).callback.post(body)
+          : client.api.webhooks(client.user.id, interaction.token).post(body.data);
 
         sentInitial = true;
 
-        replyRequest.then(response => console.log(response));
+        return replyRequest.then(response => response.id ?? '@original');
       },
-      edit(message, embeds, ephemeral = false) {
-        if (!message && !embeds) {
-          throw new Error('Message text or embed must be provided');
+      edit(input, messageId = '@original') {
+        const replyData = buildInteractionReplyData(input);
+        if (!input) {
+          throw new Error('Message content or embeds must be provided');
         }
-        client.api
-          .webhooks(client.user.id, interaction.token)
-          .messages('@original')
-          .patch({
-            data: {
-              content: message,
-              embeds: embeds ?? [],
-              flags: ephemeral ? 64 : null,
-            },
-          });
+        client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch({
+          data: replyData,
+        });
+      },
+      delete(messageId = '@original') {
+        client.api.webhooks(client.user.id, interaction.token).messages(messageId).delete();
       },
       thinking(ephemeral = false) {
+        if (sentInitial) return;
         client.api.interactions(interaction.id, interaction.token).callback.post({
           data: {
             type: 5,
             data: {
               content: '',
-              flags: ephemeral ? 64 : null,
+              flags: ephemeral ? EPHEMERAL_FLAG_ID : null,
             },
           },
         });
