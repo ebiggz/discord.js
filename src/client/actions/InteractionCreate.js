@@ -70,7 +70,7 @@ class InteractionCreateAction extends Action {
           ? client.api.interactions(interaction.id, interaction.token).callback.post(body)
           : client.api.webhooks(client.user.id, interaction.token).post(body.data);
 
-        sentInitial = true;
+        if (!sentInitial) sentInitial = true;
 
         return replyRequest.then(response => response.id ?? '@original');
       },
@@ -88,6 +88,7 @@ class InteractionCreateAction extends Action {
       },
       async thinking(ephemeral = false) {
         if (sentInitial) return;
+        sentInitial = true;
         await client.api.interactions(interaction.id, interaction.token).callback.post({
           data: {
             type: 5,
