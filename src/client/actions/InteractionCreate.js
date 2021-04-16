@@ -14,6 +14,7 @@ class InteractionCreateAction extends Action {
   async handle(data) {
     const client = this.client;
     const guild = client.guilds.cache.get(data.guild_id);
+    let sentInitial = false;
     const interaction = {
       id: data.id,
       token: data.token,
@@ -31,16 +32,25 @@ class InteractionCreateAction extends Action {
         if (!message && !embeds) {
           throw new Error('Message text or embed must be provided');
         }
-        client.api.interactions(interaction.id, interaction.token).callback.post({
-          data: {
-            type: 4,
+
+        const replyRequest = sentInitial
+          ? client.api.interactions(interaction.id, interaction.token).callback
+          : client.api.interactions(interaction.id, interaction.token);
+
+        sentInitial = true;
+
+        replyRequest
+          .post({
             data: {
-              content: message,
-              embeds: embeds ?? [],
-              flags: ephemeral ? 64 : null,
+              type: 4,
+              data: {
+                content: message,
+                embeds: embeds ?? [],
+                flags: ephemeral ? 64 : null,
+              },
             },
-          },
-        });
+          })
+          .then(response => console.log(response));
       },
       edit(message, embeds, ephemeral = false) {
         if (!message && !embeds) {
