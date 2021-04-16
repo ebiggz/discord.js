@@ -2815,9 +2815,9 @@ declare module 'discord.js' {
     content: string;
     createdTimestamp: number;
     options: { value: string; name: string }[] | null;
-    reply: (input: MessageEmbed | string) => void;
-    edit: (input: MessageEmbed | string) => void;
-    thinking: () => void;
+    reply: (message?: string, embeds?: MessageEmbed[], ephemeral?: boolean) => void;
+    edit: (message?: string, embeds?: MessageEmbed[], ephemeral?: boolean) => void;
+    thinking: (ephemeral?: boolean) => void;
   }
 
   interface MessageEmbedProvider {
