@@ -16,11 +16,12 @@ const buildInteractionReplyData = input => {
   if (typeof input === 'object') {
     if (Array.isArray(input)) {
       return {
+        content: '',
         embeds: input,
       };
     } else {
       return {
-        content: input.content,
+        content: input.content ?? '',
         embeds: input.embeds,
       };
     }
@@ -79,6 +80,7 @@ class InteractionCreateAction extends Action {
         if (!input) {
           throw new Error('Message content or embeds must be provided');
         }
+        console.log(replyData);
         await client.api.webhooks(client.user.id, interaction.token).messages(messageId).patch({
           data: replyData,
         });
