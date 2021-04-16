@@ -2804,6 +2804,12 @@ declare module 'discord.js' {
     footer?: Partial<MessageEmbedFooter> & { icon_url?: string; proxy_icon_url?: string };
   }
 
+  interface InteractionOptions {
+    value: string;
+    name: string;
+    options?: InteractionOptions[];
+  }
+
   interface Interaction {
     id: string;
     token: string;
@@ -2814,7 +2820,7 @@ declare module 'discord.js' {
     name: string;
     content: string;
     createdTimestamp: number;
-    options: { value: string; name: string }[] | null;
+    options?: InteractionOptions[];
     /**
      * Replies to this Interaction.
      *
