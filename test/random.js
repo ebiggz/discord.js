@@ -5,18 +5,45 @@
 const request = require('superagent');
 const ytdl = require('ytdl-core');
 const { token, song } = require('./auth.js');
-const Discord = require('../src');
+const { Client, Intents } = require('../src');
 
 console.time('magic');
 
-const client = new Discord.Client({ fetchAllMembers: true });
+const client = new Client({
+  intents: [
+    Intents.FLAGS.GUILDS,
+    Intents.FLAGS.GUILD_MESSAGES,
+    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+    Intents.FLAGS.GUILD_MEMBERS,
+  ],
+});
 
 client
   .login(token)
   .then(() => console.log('logged in'))
   .catch(console.error);
 
-client.on('ready', () => {
+// Fetch all members in a new guild
+client.on('guildCreate', guild =>
+  guild.members.fetch().catch(err => console.log(`Failed to fetch all members: ${err}\n${err.stack}`)),
+);
+
+// Fetch all members in a newly available guild
+client.on('guildUpdate', (oldGuild, newGuild) =>
+  !oldGuild.available && newGuild.available
+    ? guild.members.fetch().catch(err => console.log(`Failed to fetch all members: ${err}\n${err.stack}`))
+    : Promise.resolve(),
+);
+
+client.on('ready', async () => {
+  // Fetch all members for initially available guilds
+  try {
+    const promises = client.guilds.cache.map(guild => (guild.available ? guild.members.fetch() : Promise.resolve()));
+    await Promise.all(promises);
+  } catch (err) {
+    console.log(`Failed to fetch all members before ready! ${err}\n${err.stack}`);
+  }
+
   console.log(`ready with ${client.users.cache.size} users`);
   console.timeEnd('magic');
 });
@@ -26,18 +53,18 @@ client.on('debug', console.log);
 client.on('error', m => console.log('debug', new Error(m).stack));
 client.on('reconnecting', m => console.log('reconnecting', m));
 
-client.on('message', message => {
+client.on('messageCreate', message => {
   if (true) {
     if (message.content === 'makechann') {
       if (message.channel.guild) {
-        message.channel.guild.channels.create('hi', { type: 'text' }).then(console.log);
+        message.channel.guild.channels.create('hi', { type: 'GUILD_TEXT' }).then(console.log);
       }
     }
 
     if (message.content === 'imma queue pls') {
       let count = 0;
       let ecount = 0;
-      for (let x = 0; x < 4000; x++) {
+      for (let x = 0; x < 4_000; x++) {
         message.channel
           .send(`this is message ${x} of 3999`)
           .then(m => {
@@ -115,8 +142,7 @@ client.on('message', message => {
     }
 
     if (message.content.startsWith('kick')) {
-      message.guild
-        .members
+      message.guild.members
         .resolve(message.mentions.users.first())
         .kick()
         .then(member => {
@@ -140,8 +166,7 @@ client.on('message', message => {
     }
 
     if (message.content === 'makerole') {
-      message.guild
-        .roles
+      message.guild.roles
         .create()
         .then(role => {
           message.channel.send(`Made role ${role.name}`);
@@ -156,25 +181,17 @@ function nameLoop(user) {
 }
 
 function chanLoop(channel) {
-  channel
-    .setName(`${channel.name}a`)
-    .then(chanLoop)
-    .catch(console.error);
+  channel.setName(`${channel.name}a`).then(chanLoop).catch(console.error);
 }
 
-client.on('message', msg => {
+client.on('messageCreate', msg => {
   if (msg.content.startsWith('?raw')) {
     msg.channel.send(`\`\`\`${msg.content}\`\`\``);
   }
 
   if (msg.content.startsWith('#eval') && msg.author.id === '66564597481480192') {
     try {
-      const com = eval(
-        msg.content
-          .split(' ')
-          .slice(1)
-          .join(' '),
-      );
+      const com = eval(msg.content.split(' ').slice(1).join(' '));
       msg.channel.send(`\`\`\`\n${com}\`\`\``);
     } catch (e) {
       msg.channel.send(`\`\`\`\n${e}\`\`\``);
@@ -184,24 +201,17 @@ client.on('message', msg => {
 
 let disp, con;
 
-client.on('message', msg => {
+client.on('messageCreate', msg => {
   if (msg.content.startsWith('/play')) {
     console.log('I am now going to play', msg.content);
-    const chan = msg.content
-      .split(' ')
-      .slice(1)
-      .join(' ');
+    const chan = msg.content.split(' ').slice(1).join(' ');
     const s = ytdl(chan, { filter: 'audioonly' }, { passes: 3 });
     s.on('error', e => console.log(`e w stream 1 ${e}`));
     con.play(s);
   }
   if (msg.content.startsWith('/join')) {
-    const chan = msg.content
-      .split(' ')
-      .slice(1)
-      .join(' ');
-    msg.channel.guild.channels
-      .cache
+    const chan = msg.content.split(' ').slice(1).join(' ');
+    msg.channel.guild.channels.cache
       .get(chan)
       .join()
       .then(conn => {
@@ -218,19 +228,19 @@ client.on('message', msg => {
 });
 
 client.on('messageReactionAdd', (reaction, user) => {
-  if (reaction.message.channel.id !== '222086648706498562') return;
+  if (reaction.message.channelId !== '222086648706498562') return;
   reaction.message.channel.send(`${user.username} added reaction ${reaction.emoji}, count is now ${reaction.count}`);
 });
 
 client.on('messageReactionRemove', (reaction, user) => {
-  if (reaction.message.channel.id !== '222086648706498562') return;
+  if (reaction.message.channelId !== '222086648706498562') return;
   reaction.message.channel.send(`${user.username} removed reaction ${reaction.emoji}, count is now ${reaction.count}`);
 });
 
-client.on('message', m => {
+client.on('messageCreate', m => {
   if (m.content.startsWith('#reactions')) {
-    const mID = m.content.split(' ')[1];
-    m.channel.messages.fetch(mID).then(rM => {
+    const mId = m.content.split(' ')[1];
+    m.channel.messages.fetch(mId).then(rM => {
       for (const reaction of rM.reactions.cache.values()) {
         reaction.users.fetch().then(users => {
           m.channel.send(

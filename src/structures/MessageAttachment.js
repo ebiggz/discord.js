@@ -9,7 +9,7 @@ class MessageAttachment {
   /**
    * @param {BufferResolvable|Stream} attachment The file
    * @param {string} [name=null] The name of the file, if any
-   * @param {Object} [data] Extra data
+   * @param {APIAttachment} [data] Extra data
    */
   constructor(attachment, name = null, data) {
     this.attachment = attachment;
@@ -43,9 +43,27 @@ class MessageAttachment {
     return this;
   }
 
+  /**
+   * Sets whether this attachment is a spoiler
+   * @param {boolean} [spoiler=true] Whether the attachment should be marked as a spoiler
+   * @returns {MessageAttachment} This attachment
+   */
+  setSpoiler(spoiler = true) {
+    if (spoiler === this.spoiler) return this;
+
+    if (!spoiler) {
+      while (this.spoiler) {
+        this.name = this.name.slice('SPOILER_'.length);
+      }
+      return this;
+    }
+    this.name = `SPOILER_${this.name}`;
+    return this;
+  }
+
   _patch(data) {
     /**
-     * The ID of this attachment
+     * The attachment's id
      * @type {Snowflake}
      */
     this.id = data.id;
@@ -72,13 +90,19 @@ class MessageAttachment {
      * The height of this attachment (if an image or video)
      * @type {?number}
      */
-    this.height = typeof data.height !== 'undefined' ? data.height : null;
+    this.height = data.height ?? null;
 
     /**
      * The width of this attachment (if an image or video)
      * @type {?number}
      */
-    this.width = typeof data.width !== 'undefined' ? data.width : null;
+    this.width = data.width ?? null;
+
+    /**
+     * This media type of this attachment
+     * @type {?string}
+     */
+    this.contentType = data.content_type ?? null;
   }
 
   /**
@@ -87,7 +111,7 @@ class MessageAttachment {
    * @readonly
    */
   get spoiler() {
-    return Util.basename(this.url).startsWith('SPOILER_');
+    return Util.basename(this.url ?? this.name).startsWith('SPOILER_');
   }
 
   toJSON() {
@@ -96,3 +120,8 @@ class MessageAttachment {
 }
 
 module.exports = MessageAttachment;
+
+/**
+ * @external APIAttachment
+ * @see {@link https://discord.com/developers/docs/resources/channel#attachment-object}
+ */

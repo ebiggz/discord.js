@@ -64,7 +64,7 @@ class Integration extends Base {
        * The user for this integration
        * @type {?User}
        */
-      this.user = this.client.users.add(data.user);
+      this.user = this.client.users._add(data.user);
     } else {
       this.user = null;
     }
@@ -90,7 +90,7 @@ class Integration extends Base {
    */
   get roles() {
     const roles = this.guild.roles.cache;
-    return roles.filter(role => role.tags && role.tags.integrationID === this.id);
+    return roles.filter(role => role.tags?.integrationId === this.id);
   }
 
   _patch(data) {
@@ -116,59 +116,9 @@ class Integration extends Base {
          */
         this.application = new IntegrationApplication(this.client, data.application);
       }
-    } else if (!this.application) {
-      this.application = null;
+    } else {
+      this.application ??= null;
     }
-  }
-
-  /**
-   * Sync this integration
-   * @returns {Promise<Integration>}
-   */
-  sync() {
-    this.syncing = true;
-    return this.client.api
-      .guilds(this.guild.id)
-      .integrations(this.id)
-      .post()
-      .then(() => {
-        this.syncing = false;
-        this.syncedAt = Date.now();
-        return this;
-      });
-  }
-
-  /**
-   * The data for editing an integration.
-   * @typedef {Object} IntegrationEditData
-   * @property {number} [expireBehavior] The new behaviour of expiring subscribers
-   * @property {number} [expireGracePeriod] The new grace period before expiring subscribers
-   */
-
-  /**
-   * Edits this integration.
-   * @param {IntegrationEditData} data The data to edit this integration with
-   * @param {string} reason Reason for editing this integration
-   * @returns {Promise<Integration>}
-   */
-  edit(data, reason) {
-    if ('expireBehavior' in data) {
-      data.expire_behavior = data.expireBehavior;
-      data.expireBehavior = null;
-    }
-    if ('expireGracePeriod' in data) {
-      data.expire_grace_period = data.expireGracePeriod;
-      data.expireGracePeriod = null;
-    }
-    // The option enable_emoticons is only available for Twitch at this moment
-    return this.client.api
-      .guilds(this.guild.id)
-      .integrations(this.id)
-      .patch({ data, reason })
-      .then(() => {
-        this._patch(data);
-        return this;
-      });
   }
 
   /**
@@ -176,19 +126,16 @@ class Integration extends Base {
    * @returns {Promise<Integration>}
    * @param {string} [reason] Reason for deleting this integration
    */
-  delete(reason) {
-    return this.client.api
-      .guilds(this.guild.id)
-      .integrations(this.id)
-      .delete({ reason })
-      .then(() => this);
+  async delete(reason) {
+    await this.client.api.guilds(this.guild.id).integrations(this.id).delete({ reason });
+    return this;
   }
 
   toJSON() {
     return super.toJSON({
-      role: 'roleID',
-      guild: 'guildID',
-      user: 'userID',
+      role: 'roleId',
+      guild: 'guildId',
+      user: 'userId',
     });
   }
 }
